@@ -7,10 +7,12 @@ package com.example.marcin.facesdkvideo;
 
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
+import android.widget.MediaController;
 import android.widget.TextView;
 import android.view.View;
 import android.widget.Button;
@@ -18,12 +20,20 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.example.facialfeaturesfromvideo.R;
+import com.google.gson.Gson;
 import com.luxand.FSDK;
 import com.luxand.FSDK.*;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -39,8 +49,11 @@ public class MainActivity extends Activity {
 //	protected HTracker htracker;
 	protected FSDK_FaceTemplate faceTemplate = new FSDK_FaceTemplate();
 	protected LoadType loadType;
-	protected LinkedHashMap<Long,Map<String,Integer>> framesWithFaceCoords =
+	protected LinkedHashMap<Long,Map<String,List<Integer>>> framesWithFaceCoords =
 			new LinkedHashMap<>();
+	private static final int FREQUENCY = 1000000;
+	private static final String LOCATION = "/storage/emulated/0/FaceSDK/";
+	private MediaController mediaController;
 
 	private class GetFaceTemplateInBackground extends AsyncTask<String,Void,String>{
 
@@ -99,40 +112,77 @@ public class MainActivity extends Activity {
 			MediaMetadataRetriever retriever = new MediaMetadataRetriever();
 			retriever.setDataSource(picturePath);
 //			bitmap = retriever.getFrameAtTime(0,MediaMetadataRetriever.OPTION_CLOSEST);
-			long frame = 0;
-			String templateName = "template";
-			bitmap = ffRetriever.getFrameAtTime(frame,FFmpegMediaMetadataRetriever.OPTION_CLOSEST);
 
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-			result = FSDK.LoadImageFromJpegBuffer(picture,stream.toByteArray(),stream.size());
+			String durationInMs = ffRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DURATION);
+			int duration = Integer.parseInt(durationInMs) * 1000;
 
-			if (result == FSDK.FSDKE_OK) {
-//				result = FSDK.DetectFace(picture, faceCoords);
-				result = FSDK.DetectMultipleFaces(picture, facesArray);
-				features = new FSDK_Features();
+			for(long time = 0; time < duration ; time+=FREQUENCY) {
+
+				String templateName = "template";
+				bitmap = ffRetriever.getFrameAtTime(time,FFmpegMediaMetadataRetriever.OPTION_CLOSEST);
+
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+				result = FSDK.LoadImageFromJpegBuffer(picture, stream.toByteArray(), stream.size());
+
 				if (result == FSDK.FSDKE_OK) {
-					for(TFacePosition facePosition : facesArray.faces) {
-						result = FSDK.DetectFacialFeaturesInRegion(picture, facePosition, features);
-						FSDK_FaceTemplate currentTemplate = new FSDK_FaceTemplate();
-						matchFaceResult = FSDK.GetFaceTemplate(picture, currentTemplate);
-						if (matchFaceResult == FSDK.FSDKE_OK) {
-							matchFaceResult = FSDK.MatchFaces(currentTemplate, faceTemplate, similarity);
+//				result = FSDK.DetectFace(picture, faceCoords);
+					result = FSDK.DetectMultipleFaces(picture, facesArray);
+					features = new FSDK_Features();
+					if (result == FSDK.FSDKE_OK) {
+						for (TFacePosition facePosition : facesArray.faces) {
+							result = FSDK.DetectFacialFeaturesInRegion(picture, facePosition, features);
+							FSDK_FaceTemplate currentTemplate = new FSDK_FaceTemplate();
+							matchFaceResult = FSDK.GetFaceTemplate(picture, currentTemplate);
 							if (matchFaceResult == FSDK.FSDKE_OK) {
-								log = "Template matched with probability " + similarity[0];
-								facesCoords.add(facePosition);
-								Map<String,Integer> faceCoordsMap = new HashMap<>();
-								faceCoordsMap.put(templateName,facePosition.xc);
-								faceCoordsMap.put(templateName,facePosition.yc);
-								faceCoordsMap.put(templateName,facePosition.w);
-								framesWithFaceCoords.put(frame,faceCoordsMap);
+								matchFaceResult = FSDK.MatchFaces(currentTemplate, faceTemplate, similarity);
+								if (matchFaceResult == FSDK.FSDKE_OK) {
+									log = "Template matched with probability " + similarity[0];
+									facesCoords.add(facePosition);
+									List<Integer> coordsList = new ArrayList<>();
+									coordsList.add(facePosition.xc);
+									coordsList.add(facePosition.yc);
+									coordsList.add(facePosition.w);
+									Map<String,List<Integer>> map = new HashMap<>();
+									map.put(templateName,coordsList);
+									framesWithFaceCoords.put(time, map);
+								} else
+									log = "Template not matched";
 							} else
-								log = "Template not matched";
-						} else
-							log = "Error while getting template from video";
+								log = "Error while getting template from video";
+						}
 					}
 				}
 			}
+
+			String [] splitted = picturePath.split("/");
+			String filename = splitted[splitted.length-1];
+			filename = filename.replace(".mp4","");
+			String frameDefinitionPath = LOCATION+filename+".json";
+//			log = frameDefinitionPath;
+
+			OutputStreamWriter outputStreamWriter = null;
+			FileOutputStream fileOutputStream = null;
+			try {
+				File file = new File(frameDefinitionPath);
+				file.createNewFile();
+				fileOutputStream = new FileOutputStream(file);
+				outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+				Gson gson = new Gson();
+				String json = gson.toJson(framesWithFaceCoords);
+				outputStreamWriter.append(json);
+			} catch (Exception ex){
+				Toast.makeText(getBaseContext(), ex.getMessage(),
+						Toast.LENGTH_SHORT).show();
+			} finally {
+				try {
+					outputStreamWriter.close();
+					fileOutputStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+
 			processing = false; //long-running code is complete, now user may push the button
 			return log;
 		}
@@ -238,6 +288,19 @@ public class MainActivity extends Activity {
 			}
 		});
 
+		Button buttonLoadFacesVideo = (Button) findViewById(R.id.buttonLoadVideoWithFaces);
+		buttonLoadFacesVideo.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View arg) {
+				if (!processing) {
+					processing = true;
+					loadType = LoadType.FACES_VIDEO;
+					Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+					startActivityForResult(i, RESULT_LOAD_IMAGE);
+				}
+			}
+		});
+
 		processing = false;
 	}
 
@@ -269,12 +332,33 @@ public class MainActivity extends Activity {
 //				new DetectFaceInBackground().execute(picturePath);
 			else if(loadType == LoadType.VIDEO)
 				new DetectFaceInBackground().execute(picturePath);
+			else if(loadType == LoadType.FACES_VIDEO)
+				handleVideo(picturePath);
 		} else {
 			processing = false;
 		}
 	}
 
+	private void handleVideo(String picturePath) {
+		final VideoView videoView = (VideoView) findViewById(R.id.videoView1);
+		if (mediaController == null) {
+			mediaController = new MediaController(MainActivity.this);
+		}
+		videoView.setMediaController(mediaController);
+		videoView.setVideoPath(picturePath);
+		videoView.requestFocus();
+		videoView.setVisibility(VideoView.VISIBLE);
+		videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+			@Override
+			public void onPrepared(MediaPlayer mp) {
+				videoView.seekTo(0);
+				videoView.start();
+			}
+		});
+
+	}
+
 	private enum LoadType{
-		PHOTO,VIDEO
+		PHOTO,VIDEO, FACES_VIDEO
 	}
 }

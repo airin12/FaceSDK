@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- From: file:/C:/Users/Marcin/AndroidStudioProjects/FacialFeaturesFromVideo/jcodec/build/intermediates/bundles/debug/res/values/values.xml -->
+    <!-- From: file:/D:/magisterka/facesdkrepo/FaceSDK/jcodec/build/intermediates/bundles/debug/res/values/values.xml -->
     <eat-comment/>
     <string name="app_name">jcodec</string>
     <style name="AppBaseTheme" parent="android:Theme.Light">

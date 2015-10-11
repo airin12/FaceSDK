@@ -25,4 +25,5 @@ dependencies {
     compile project(':jcodec')
     compile 'com.github.bumptech.glide:glide:3.6.1'
     compile 'com.github.wseemann:FFmpegMediaMetadataRetriever:1.0.1'
+    compile 'com.google.code.gson:gson:2.4'
 }

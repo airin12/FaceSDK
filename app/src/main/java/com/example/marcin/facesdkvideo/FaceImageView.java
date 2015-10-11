@@ -57,7 +57,10 @@ public class FaceImageView extends ImageView {
 	public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-		for(TFacePosition detectedFace : detectedFaces) {
+		if(detectedFaces.size()<1)
+			return;
+		TFacePosition detectedFace = detectedFaces.get(detectedFaces.size() - 1);
+
 			if (faceImageWidthOrig > 0 && detectedFace.w > 0) {
 				//scale detected face
 				int displayedWidth = this.getWidth();
@@ -82,7 +85,6 @@ public class FaceImageView extends ImageView {
 					canvas.drawCircle(cx, cy, 3, painter);
 				}
 			}
-		}
     }
 	
 	//remove white borders of image to mark face correctly
