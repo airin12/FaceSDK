@@ -11,6 +11,8 @@ import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
+import android.os.Environment;
+import android.util.Log;
 import android.view.Menu;
 import android.widget.MediaController;
 import android.widget.TextView;
@@ -25,15 +27,19 @@ import android.widget.VideoView;
 
 import com.example.facialfeaturesfromvideo.R;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.luxand.FSDK;
 import com.luxand.FSDK.*;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -340,22 +346,64 @@ public class MainActivity extends Activity {
 	}
 
 	private void handleVideo(String picturePath) {
-		final VideoView videoView = (VideoView) findViewById(R.id.videoView1);
+		final ShowVideoView videoView = (ShowVideoView) findViewById(R.id.videoView1);
 		if (mediaController == null) {
 			mediaController = new MediaController(MainActivity.this);
 		}
+
+		String [] splitted = picturePath.split("/");
+		String jsonPath = splitted[splitted.length-1].replace("mp4","json");
+		jsonPath = LOCATION + jsonPath;
+
+		LinkedHashMap<Long,Map<String,List<Integer>>> framesConfig = getJsonFramesConfig(jsonPath);
+
+		FFmpegMediaMetadataRetriever retriever = new FFmpegMediaMetadataRetriever();
+		retriever.setDataSource(picturePath);
+		final String duration = retriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DURATION);
+		Bitmap bmp = retriever.getFrameAtTime();
+		videoView.setFrameWidth(bmp.getWidth());
+
+		Log.e("TIME","duration "+duration);
+
+		videoView.setFramesWithFaceCoords(framesConfig);
 		videoView.setMediaController(mediaController);
 		videoView.setVideoPath(picturePath);
 		videoView.requestFocus();
+		videoView.seekTo(0);
 		videoView.setVisibility(VideoView.VISIBLE);
 		videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
 			@Override
 			public void onPrepared(MediaPlayer mp) {
-				videoView.seekTo(0);
+				videoView.setActualDuration(0);
+				videoView.setVideoDuration(Long.parseLong(duration));
 				videoView.start();
 			}
 		});
 
+	}
+
+	private LinkedHashMap<Long,Map<String,List<Integer>>> getJsonFramesConfig(String jsonPath) {
+		File file = new File(jsonPath);
+		StringBuilder stringBuilder = new StringBuilder();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(file));
+			String line;
+
+			while ((line = br.readLine()) != null) {
+				stringBuilder.append(line);
+				stringBuilder.append('\n');
+			}
+			br.close();
+		}
+		catch (IOException e) {
+			//You'll need to add proper error handling here
+			return null;
+		}
+		Gson gson = new Gson();
+		Type type = new TypeToken<LinkedHashMap<Long,Map<String,List<Integer>>>>(){}.getType();
+		LinkedHashMap<Long,Map<String,List<Integer>>> deserialized =
+		gson.fromJson(stringBuilder.toString(),type);
+		return deserialized;
 	}
 
 	private enum LoadType{
