@@ -42,7 +42,6 @@ public class ShowVideoView extends VideoView {
         paint.setColor(Color.RED);
         paint.setTextSize(25);
         paint.setTextAlign(Paint.Align.CENTER);
-//        setWillNotDraw(false);
     }
 
     public ShowVideoView(Context context) {
@@ -63,33 +62,9 @@ public class ShowVideoView extends VideoView {
     @Override
     public void start() {
         super.start();
-        Log.e("SIZEW", getWidth() + " " + frameWidth);
         ratio = (double) getWidth()/frameWidth;
-        Log.e("SIZEW",ratio+"");
     }
 
-    //    @Override
-//    public void start() {
-//        actualDuration = 0;
-//        startTime = System.currentTimeMillis();
-//        Log.e("TIME","Start time "+startTime);
-//        super.start();
-//    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        Log.e("DRAW", "onDraw");
-        drawText(canvas);
-        super.onDraw(canvas);
-        drawText(canvas);
-//        if(actualDuration == 0)
-//            startTime = System.currentTimeMillis();
-//        actualDuration = System.currentTimeMillis() - startTime;
-//        if(actualDuration < videoDuration)
-//            invalidate();
-        if(getCurrentPosition()<videoDuration)
-            invalidate();
-    }
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
@@ -103,33 +78,10 @@ public class ShowVideoView extends VideoView {
         drawText(canvas);
         super.dispatchDraw(canvas);
         drawText(canvas);
-        i++;
-        j++;
-//        actualDuration = System.currentTimeMillis() - startTime;
-//        Log.e("TIME","actual "+actualDuration);
-//        if(actualDuration < videoDuration)
+
         Log.e("TIME","current "+getCurrentPosition());
         if(getCurrentPosition() < videoDuration)
             invalidate();
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-//        Drawable drawable = getBackground();
-//        //super.onMeasure(100,100);
-//        setMeasuredDimension(100,100);
-//        Rest = getClipBounds()
-//        Log.e("MEASURE","BEFORE CHECK");
-//        if (drawable != null) {
-//            int width = MeasureSpec.getSize(widthMeasureSpec);
-//            int height = (int) Math.ceil((float) width * (float) drawable.getIntrinsicHeight() / (float) drawable.getIntrinsicWidth());
-//            setMeasuredDimension(width, height);
-//            Log.e("MEASURE",width+" "+height);
-//        } else {
-//            Log.e("MEASURE","NULL");
-//            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-//        }
     }
 
     private void drawText(Canvas canvas){

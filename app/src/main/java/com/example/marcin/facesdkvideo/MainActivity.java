@@ -11,7 +11,6 @@ import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
-import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.widget.MediaController;
@@ -26,6 +25,8 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.example.facialfeaturesfromvideo.R;
+import com.example.marcin.facesdkvideo.config.Configuration;
+import com.example.marcin.facesdkvideo.config.ConfigurationFactory;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.luxand.FSDK;
@@ -34,7 +35,6 @@ import com.luxand.FSDK.*;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -49,17 +49,16 @@ import java.util.Map;
 import wseemann.media.FFmpegMediaMetadataRetriever;
 
 public class MainActivity extends Activity {
-	protected HImage oldpicture;
+	private HImage oldpicture;
 	private static int RESULT_LOAD_IMAGE = 1;
-	protected boolean processing;
-//	protected HTracker htracker;
-	protected FSDK_FaceTemplate faceTemplate = new FSDK_FaceTemplate();
-	protected LoadType loadType;
-	protected LinkedHashMap<Long,Map<String,List<Integer>>> framesWithFaceCoords =
+	private boolean processing;
+	private FSDK_FaceTemplate faceTemplate = new FSDK_FaceTemplate();
+	private LoadType loadType;
+	private LinkedHashMap<Long,Map<String,List<Integer>>> framesWithFaceCoords =
 			new LinkedHashMap<>();
-	private static final int FREQUENCY = 1000000;
-	private static final String LOCATION = "/storage/emulated/0/FaceSDK/";
 	private MediaController mediaController;
+
+	private Configuration configuration;
 
 	private class GetFaceTemplateInBackground extends AsyncTask<String,Void,String>{
 
@@ -84,7 +83,7 @@ public class MainActivity extends Activity {
 
 		@Override
 		protected void onPostExecute(String resultstring) {
-			TextView tv = (TextView) findViewById(R.id.textView1);
+			TextView tv = (TextView) findViewById(R.id.messageTextView);
 
 			tv.setText(resultstring);
 		}
@@ -122,7 +121,7 @@ public class MainActivity extends Activity {
 			String durationInMs = ffRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DURATION);
 			int duration = Integer.parseInt(durationInMs) * 1000;
 
-			for(long time = 0; time < duration ; time+=FREQUENCY) {
+			for(long time = 0; time < duration ; time+=configuration.getSamplingFrequency()) {
 
 				String templateName = "template";
 				bitmap = ffRetriever.getFrameAtTime(time,FFmpegMediaMetadataRetriever.OPTION_CLOSEST);
@@ -164,7 +163,7 @@ public class MainActivity extends Activity {
 			String [] splitted = picturePath.split("/");
 			String filename = splitted[splitted.length-1];
 			filename = filename.replace(".mp4","");
-			String frameDefinitionPath = LOCATION+filename+".json";
+			String frameDefinitionPath = configuration.getFacesDefinitionLocation()+filename+".json";
 //			log = frameDefinitionPath;
 
 			OutputStreamWriter outputStreamWriter = null;
@@ -195,7 +194,7 @@ public class MainActivity extends Activity {
 
 		@Override
 		protected void onPostExecute(String resultstring) {
-			TextView tv = (TextView) findViewById(R.id.textView1);
+			TextView tv = (TextView) findViewById(R.id.messageTextView);
 
 			if (result != FSDK.FSDKE_OK){
 				tv.setText("Face not detected");
@@ -242,12 +241,12 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		configuration = ConfigurationFactory.getInstance(getApplicationContext());
 		processing = true; //prevent user from pushing the button while initializing
-
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main); //using res/layout/activity_main.xml
 
-		TextView tv = (TextView) findViewById(R.id.textView1);
+		TextView tv = (TextView) findViewById(R.id.messageTextView);
 
 		try {
 			int res = FSDK.ActivateLibrary("mlxAah4CuoSeGQNclX2GnqIfXRy5ALqPdcpIlucjvieu0KKn/nVutHz070FLwSDzichHpBPsfSfVGl4R6J/QEX94do1CDNqQh7pB+ymw4SZ5jCEL1Z1W9o1eH0pjSLdUcidckotH+DHeuYJIqKi7zMLmxqrxiF0/K431ESZDj44=");
@@ -268,7 +267,7 @@ public class MainActivity extends Activity {
 		}
 
 		// Adding button
-		Button buttonLoadImage1 = (Button) findViewById(R.id.buttonLoadVideo);
+		Button buttonLoadImage1 = (Button) findViewById(R.id.buttonProcessVideo);
 		buttonLoadImage1.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg) {
@@ -281,7 +280,7 @@ public class MainActivity extends Activity {
 			}
 		});
 
-		Button buttonLoadImage2 = (Button) findViewById(R.id.buttonLoadImage);
+		Button buttonLoadImage2 = (Button) findViewById(R.id.buttonLoadTemplate);
 		buttonLoadImage2.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -331,7 +330,7 @@ public class MainActivity extends Activity {
 			String picturePath = cursor.getString(columnIndex);
 			cursor.close();
 
-			TextView tv = (TextView) findViewById(R.id.textView1);
+			TextView tv = (TextView) findViewById(R.id.messageTextView);
 			tv.setText("processing...");
 			if(loadType == LoadType.PHOTO)
 				new GetFaceTemplateInBackground().execute(picturePath);
@@ -353,7 +352,7 @@ public class MainActivity extends Activity {
 
 		String [] splitted = picturePath.split("/");
 		String jsonPath = splitted[splitted.length-1].replace("mp4","json");
-		jsonPath = LOCATION + jsonPath;
+		jsonPath = configuration.getFacesDefinitionLocation() + jsonPath;
 
 		LinkedHashMap<Long,Map<String,List<Integer>>> framesConfig = getJsonFramesConfig(jsonPath);
 

@@ -31,8 +31,6 @@ public class FaceImageView extends ImageView {
 	public void Init() {
 		faceImageWidthOrig = 0;
 		facial_features = null;
-//		detectedFace = new TFacePosition();
-//		detectedFace.w = 0;
 		detectedFaces = new ArrayList<>();
 		painter = new Paint();
         painter.setColor(Color.BLUE);
@@ -59,32 +57,31 @@ public class FaceImageView extends ImageView {
 
 		if(detectedFaces.size()<1)
 			return;
+
 		TFacePosition detectedFace = detectedFaces.get(detectedFaces.size() - 1);
 
-			if (faceImageWidthOrig > 0 && detectedFace.w > 0) {
-				//scale detected face
-				int displayedWidth = this.getWidth();
-				//int displayedHeight = this.getHeight();
+		if (faceImageWidthOrig > 0 && detectedFace.w > 0) {
+			//scale detected face
+			int displayedWidth = this.getWidth();
+			//int displayedHeight = this.getHeight();
+			double ratio = displayedWidth / (faceImageWidthOrig * 1.0);
+			int xc = (int) (detectedFace.xc * ratio);
+			int yc = (int) (detectedFace.yc * ratio);
+			int w = (int) (detectedFace.w * ratio);
+			//draw detected face
+			canvas.drawRect(xc - w / 2, yc - w / 2, xc + w / 2, yc + w / 2, painter);
+		}
 
-				double ratio = displayedWidth / (faceImageWidthOrig * 1.0);
-				int xc = (int) (detectedFace.xc * ratio);
-				int yc = (int) (detectedFace.yc * ratio);
-				int w = (int) (detectedFace.w * ratio);
-
-				//draw detected face
-				canvas.drawRect(xc - w / 2, yc - w / 2, xc + w / 2, yc + w / 2, painter);
+		if (faceImageWidthOrig > 0 && facial_features != null) {
+			int displayedWidth = this.getWidth();
+			double ratio = displayedWidth / (faceImageWidthOrig * 1.0);
+			for (int i = 0; i < FSDK.FSDK_FACIAL_FEATURE_COUNT; ++i) { //for all facial features
+				//scale detected facial features
+				int cx = (int) (facial_features.features[i].x * ratio);
+				int cy = (int) (facial_features.features[i].y * ratio);
+				canvas.drawCircle(cx, cy, 3, painter);
 			}
-
-			if (faceImageWidthOrig > 0 && facial_features != null) {
-				int displayedWidth = this.getWidth();
-				double ratio = displayedWidth / (faceImageWidthOrig * 1.0);
-				for (int i = 0; i < FSDK.FSDK_FACIAL_FEATURE_COUNT; ++i) { //for all facial features
-					//scale detected facial features
-					int cx = (int) (facial_features.features[i].x * ratio);
-					int cy = (int) (facial_features.features[i].y * ratio);
-					canvas.drawCircle(cx, cy, 3, painter);
-				}
-			}
+		}
     }
 	
 	//remove white borders of image to mark face correctly

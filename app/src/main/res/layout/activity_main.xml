@@ -6,55 +6,45 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/messageTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:text="TextView" />
+        android:text="@string/init_message_log" />
 
     <Button
-        android:id="@+id/buttonLoadVideo"
+        android:id="@+id/buttonLoadTemplate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:text="LoadVideo"
+        android:text="@string/load_template"
         android:layout_marginTop="10dp"
         android:layout_gravity="center"/>
 
     <Button
-    android:id="@+id/buttonLoadImage"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_alignParentRight="true"
-    android:layout_alignParentTop="true"
-    android:text="LoadPhoto"
-    android:layout_marginTop="10dp"
-    android:layout_gravity="center"/>
+        android:id="@+id/buttonProcessVideo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/process_video"
+        android:layout_marginTop="10dp"
+        android:layout_gravity="center"/>
 
     <Button
         android:id="@+id/buttonLoadVideoWithFaces"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:text="LoadFacesVideo"
+        android:text="@string/play_video"
         android:layout_marginTop="10dp"
         android:layout_gravity="center"/>
 
     <com.example.marcin.facesdkvideo.FaceImageView
         android:id="@+id/imageView1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-         />
+        android:layout_height="wrap_content"/>
 
     <com.example.marcin.facesdkvideo.ShowVideoView
         android:id="@+id/videoView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        android:layout_gravity="center"/>
 
 </LinearLayout>
