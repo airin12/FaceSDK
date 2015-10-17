@@ -104,7 +104,7 @@ public class MainActivity extends Activity {
 
 		@Override
 		protected String doInBackground(String... params) {
-			String log = new String();
+			String log = "";
 			picturePath = params[0];
 			facesCoords = new ArrayList<>();
 //			faceCoords = new TFacePosition();
@@ -160,11 +160,7 @@ public class MainActivity extends Activity {
 				}
 			}
 
-			String [] splitted = picturePath.split("/");
-			String filename = splitted[splitted.length-1];
-			filename = filename.replace(".mp4","");
-			String frameDefinitionPath = configuration.getFacesDefinitionLocation()+filename+".json";
-//			log = frameDefinitionPath;
+			String frameDefinitionPath = generateJsonFileLoaction(picturePath);
 
 			OutputStreamWriter outputStreamWriter = null;
 			FileOutputStream fileOutputStream = null;
@@ -334,7 +330,6 @@ public class MainActivity extends Activity {
 			tv.setText("processing...");
 			if(loadType == LoadType.PHOTO)
 				new GetFaceTemplateInBackground().execute(picturePath);
-//				new DetectFaceInBackground().execute(picturePath);
 			else if(loadType == LoadType.VIDEO)
 				new DetectFaceInBackground().execute(picturePath);
 			else if(loadType == LoadType.FACES_VIDEO)
@@ -350,9 +345,7 @@ public class MainActivity extends Activity {
 			mediaController = new MediaController(MainActivity.this);
 		}
 
-		String [] splitted = picturePath.split("/");
-		String jsonPath = splitted[splitted.length-1].replace("mp4","json");
-		jsonPath = configuration.getFacesDefinitionLocation() + jsonPath;
+		String jsonPath = generateJsonFileLoaction(picturePath);
 
 		LinkedHashMap<Long,Map<String,List<Integer>>> framesConfig = getJsonFramesConfig(jsonPath);
 
@@ -381,6 +374,13 @@ public class MainActivity extends Activity {
 
 	}
 
+	private String generateJsonFileLoaction(String picturePath){
+		String [] splitted = picturePath.split("/");
+		String jsonPath = splitted[splitted.length-1].replace("mp4","json");
+		jsonPath = configuration.getFacesDefinitionLocation() + jsonPath;
+		return jsonPath;
+	}
+
 	private LinkedHashMap<Long,Map<String,List<Integer>>> getJsonFramesConfig(String jsonPath) {
 		File file = new File(jsonPath);
 		StringBuilder stringBuilder = new StringBuilder();
@@ -404,6 +404,8 @@ public class MainActivity extends Activity {
 		gson.fromJson(stringBuilder.toString(),type);
 		return deserialized;
 	}
+
+
 
 	private enum LoadType{
 		PHOTO,VIDEO, FACES_VIDEO
