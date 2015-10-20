@@ -24,14 +24,14 @@ import java.util.List;
 
 public class FaceImageView extends ImageView {
 	private Paint painter;
-    public List<TFacePosition> detectedFaces;
+    public TFacePosition detectedFace;
     public FSDK_Features facial_features;
     public int faceImageWidthOrig;
     
 	public void Init() {
 		faceImageWidthOrig = 0;
 		facial_features = null;
-		detectedFaces = new ArrayList<>();
+		detectedFace = null;
 		painter = new Paint();
         painter.setColor(Color.BLUE);
         painter.setStrokeWidth(1);
@@ -55,10 +55,8 @@ public class FaceImageView extends ImageView {
 	public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-		if(detectedFaces.size()<1)
+		if(detectedFace == null)
 			return;
-
-		TFacePosition detectedFace = detectedFaces.get(detectedFaces.size() - 1);
 
 		if (faceImageWidthOrig > 0 && detectedFace.w > 0) {
 			//scale detected face
