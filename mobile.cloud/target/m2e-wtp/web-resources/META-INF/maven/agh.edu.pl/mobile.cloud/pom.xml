@@ -1,0 +1,68 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>agh.edu.pl</groupId>
+  <artifactId>mobile.cloud</artifactId>
+  <packaging>war</packaging>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>mobile.cloud Maven Webapp</name>
+  <url>http://maven.apache.org</url>
+  
+  <dependencies>
+    <dependency>
+		<groupId>javax.servlet</groupId>
+		<artifactId>servlet-api</artifactId>
+		<version>2.5</version>
+	</dependency>
+
+	<dependency>
+		<groupId>org.glassfish.jersey.containers</groupId>
+		<artifactId>jersey-container-servlet-core</artifactId>
+		<version>2.22.1</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.luxand</groupId>
+		<artifactId>FaceSDK</artifactId>
+		<version>6.0.0</version>
+     </dependency>
+     
+     <dependency>
+		<groupId>jna</groupId>
+		<artifactId>jna</artifactId>
+		<version>1.0</version>
+     </dependency>
+     
+     <dependency>
+		<groupId>org.glassfish.jersey.containers</groupId>
+		<artifactId>jersey-container-servlet-core</artifactId>
+		<version>2.22.1</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.google.code.gson</groupId>
+		<artifactId>gson</artifactId>
+		<version>2.4</version>
+	</dependency>
+     
+   	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-lang3</artifactId>
+	<version>3.4</version>
+</dependency>
+     
+  </dependencies>
+  
+  <repositories>
+    <!--other repositories if any-->
+    <repository>
+        <id>project.local</id>
+        <name>project</name>
+        <url>file:${project.basedir}/repo</url>
+    </repository>
+  </repositories>
+
+  <build>
+    <finalName>mobile.cloud</finalName>
+  </build>
+</project>
